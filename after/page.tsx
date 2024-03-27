@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
-import styled from 'styled-components';
+import styled from "styled-components";
 import { parseEther, Contract } from "ethers";
-import BurnBar from "./BurnBar";
-import SupplyBar from "./SupplyBar";
-import SupplyTopBar from "./SupplyTopBar";
-import SupplyLabelList from "./SupplyLabelList";
-import { useFetchTransactions } from "../Hooks/useFetchTransactions";
-import { useCoinData } from "../Hooks/useCoinData";
-
-
+import BurnBar from "./components/BurnBar";
+import SupplyBar from "./components/SupplyBar";
+import SupplyTopBar from "./components/SupplyTopBar";
+import SupplyLabelList from "./components/SupplyLabelList";
+import { useFetchTransactions } from "./hooks/useFetchTransactions";
 
 const BurnPageStyled = styled.div``;
 
@@ -76,7 +73,11 @@ export const BurnPage = () => {
     setBurnAmount(e.target.value);
   };
 
-  const refetchTransactions = useFetchTransactions({walletChain, setBurnTransactions, isSubscribed:false});
+  const refetchTransactions = useFetchTransactions({
+    walletChain,
+    setBurnTransactions,
+    isSubscribed: false,
+  });
 
   const executeBurn = async () => {
     if (!isWalletConnected) {
@@ -117,8 +118,12 @@ export const BurnPage = () => {
     }
   };
 
-  const handleFetchTransactions = useFetchTransactions({walletChain, setBurnTransactions, isSubscribed:true})
-  
+  const handleFetchTransactions = useFetchTransactions({
+    walletChain,
+    setBurnTransactions,
+    isSubscribed: true,
+  });
+
   useEffect(() => {
     if (!walletChain) return;
     //console.log(suppliesChain);
@@ -130,7 +135,6 @@ export const BurnPage = () => {
     if (isSubscribed) setBurnTransactions([]);
     handleFetchTransactions();
 
-    
     return () => {
       isSubscribed = false;
     };
@@ -154,158 +158,29 @@ export const BurnPage = () => {
                 permanently removing a certain number of them from circulation,
                 often through a deliberate and recorded mechanism. &quot;
               </div>
-
-              <div className="burn_bar">
-                <div className="input_value_box">
-                  <p className="input_muted">Enter amount to Burn</p>
-                  <input
-                    className="input_value"
-                    type="text"
-                    value={burnAmount}
-                    placeholder="0.00"
-                    onChange={onChangeBurnAmount}
-                  />
-                </div>
-                <Button
-                  variant="outlined"
-                  onClick={executeBurn}
-                  startIcon={
-                    txProgress ? (
-                      <CircularProgress size={20} color="inherit" />
-                    ) : (
-                      <AppIcon
-                        url="/icons/fire.svg"
-                        fill={IconFilter.primary}
-                        size={1.5}
-                        margin={0}
-                      />
-                    )
-                  }
-                >
-                  <span>{txButton}</span>
-                </Button>
-              </div>
-              {burnTxHash && (
-                <div className="tx_links">
-                  <AppTooltip
-                    title={`Check burn Transaction on chain ${walletChain?.blockExplorers?.default?.name}`}
-                  >
-                    <AppExtLink
-                      url={`${walletChain?.blockExplorers?.default?.url}/tx/${burnTxHash}`}
-                      className="header_link"
-                    >
-                      Burn Tx: {prettyEthAddress(burnTxHash ?? zeroAddress)}
-                    </AppExtLink>
-                  </AppTooltip>
-                </div>
-              )}
+              <BurnBar
+                burnAmount={burnAmount}
+                onChangeBurnAmount={onChangeBurnAmount}
+                executeBurn={executeBurn}
+                txButton={txButton}
+                burnTxHash={burnTxHash}
+                txProgress={txProgress}
+              />
             </BurnButtonBar>
           </div>
           <BurnStatsContainer>
-            <div className="top_bar">
-              <AppIcon
-                url="/images/token/App_new.svg"
-                size={2}
-                margin={0}
-                fill={IconFilter.unset}
-              />
-              <p className="label">App SUPPLY</p>
-              <AppChip
-                onClick={openChainModal}
-                title={walletChain?.name || "---"}
-                endIcon={"/icons/expand_more.svg"}
-                startIcon={`/images/token/${walletChain?.nativeCurrency?.symbol}.svg`}
-              ></AppChip>
-              <AppExtLink
-                className=" supply_label"
-                url={`${suppliesChain?.blockExplorers?.default?.url}/address/${tokenAddress}`}
-              >
-                View Contract
-              </AppExtLink>
-            </div>
-            <div className="supply_bar">
-              <AppIcon
-                url="/icons/fire.svg"
-                size={1.15}
-                margin={0}
-                fill={IconFilter.primary}
-              />
-              <AppIcon
-                url="/icons/double_arrow.svg"
-                size={1.15}
-                style={{
-                  margin: "0 0 0 -0.8rem",
-                }}
-                fill={IconFilter.primary}
-              />
-              <span
-                className="line orange"
-                style={{ width: `${100 - statsSupplies.circulatingPercent}%` }}
-              ></span>
-              <span
-                className="line green"
-                style={{ width: `${statsSupplies.circulatingPercent}%` }}
-              ></span>
-            </div>
-            <div className="supply_label_list">
-              <div>
-                <p className="supply_label">
-                  <span className="hyphen orange"></span>
-                  <span className="text">Burnt App Tokens</span>
-                  <span className="percent orange">
-                    {(100 - statsSupplies.circulatingPercent).toFixed(2)}%
-                  </span>
-                </p>
-                <p className="supply_value">
-                  <AppIcon
-                    size={1.25}
-                    url={`/images/token/${walletChain?.nativeCurrency?.symbol}.svg`}
-                    fill={IconFilter.unset}
-                    margin={0}
-                  />
-                  {numberWithCommas(
-                    statsSupplies.totalSupply - statsSupplies.circulatingSupply
-                  )}
-                </p>
-                <div className="full_supply">
-                  Original App Token Initial Supply:
-                  {numberWithCommas(statsSupplies.totalSupply)}
-                </div>
-              </div>
-              <div>
-                <p className="supply_label">
-                  <span className="hyphen green"></span>
-                  <span className="text">Circulating App Tokens</span>
-                  <span className="percent green">
-                    {statsSupplies.circulatingPercent.toFixed(2)}%
-                  </span>
-                </p>
-                <p className="supply_value">
-                  <AppIcon
-                    size={1.25}
-                    url={`/images/token/${walletChain?.nativeCurrency?.symbol}.svg`}
-                    fill={IconFilter.unset}
-                    margin={0}
-                  />
-                  {numberWithCommas(statsSupplies.circulatingSupply)}
-                </p>
-                {allSupplies
-                  .filter((s) => s.chainId != walletChain?.id)
-                  .map((s: any) => (
-                    <p key={s.chainId} className="supply_value mini">
-                      <AppIcon
-                        size={1.25}
-                        url={`/images/token/${
-                          chainTokenSymbols.get(s.chainId) ?? "ETH"
-                        }.svg`}
-                        fill={IconFilter.unset}
-                        margin={0}
-                      />
-                      {numberWithCommas(s.circulatingSupply)}
-                    </p>
-                  ))}
-              </div>
-            </div>
+            <SupplyTopBar
+              tokenAddress={tokenAddress}
+              walletChain={walletChain}
+              suppliesChain={suppliesChain}
+              openChainModal={openChainModal}
+            />
+            <SupplyBar statsSupplies={statsSupplies} />
+            <SupplyLabelList
+              statsSupplies={statsSupplies}
+              walletChain={walletChain}
+              allSupplies={allSupplies}
+            />
           </BurnStatsContainer>
         </div>
       </DashboardLayoutStyled>
