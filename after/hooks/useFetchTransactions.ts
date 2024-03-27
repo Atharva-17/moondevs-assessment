@@ -1,4 +1,3 @@
-
 export function useFetchTransactions({ walletChain, setBurnTransactions. isSubscribed}) {
 
   const refetchTransactions = async () => {
